@@ -11,7 +11,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-2xl font-bold">
-            NEOShop
+            NEOFashion
           </Link>
           <nav className="hidden md:block">
             <ul className="flex gap-6">
@@ -21,18 +21,28 @@ export function Header() {
                 </Link>
               </li>
               <li>
-                <Link href="/shop/products/category/electronics" className="hover:text-primary">
-                  電子產品
+                <Link href="/shop/products/category/mens" className="hover:text-primary">
+                  男裝
                 </Link>
               </li>
               <li>
-                <Link href="/shop/products/category/clothing" className="hover:text-primary">
-                  服飾
+                <Link href="/shop/products/category/womens" className="hover:text-primary">
+                  女裝
                 </Link>
               </li>
               <li>
-                <Link href="/shop/products/category/home" className="hover:text-primary">
-                  家居
+                <Link href="/shop/products/category/accessories" className="hover:text-primary">
+                  配飾
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop/products/category/new" className="hover:text-primary">
+                  新品上市
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop/products/category/sale" className="hover:text-primary">
+                  特價商品
                 </Link>
               </li>
             </ul>
@@ -42,7 +52,7 @@ export function Header() {
           <div className="relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="搜尋商品..."
+              placeholder="搜尋服裝..."
               className="pl-8"
             />
           </div>

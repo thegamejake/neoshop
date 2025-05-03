@@ -11,18 +11,18 @@ export default function Home() {
       <section className="relative h-[500px] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30 z-10" />
         <Image
-          src="https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=2070"
-          alt="電商首頁橫幅"
+          src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=2070"
+          alt="服裝電商首頁橫幅"
           fill
           className="object-cover"
           priority
         />
         <div className="relative z-20 flex h-full flex-col items-start justify-center p-8 md:p-16">
           <h1 className="mb-4 max-w-xl text-4xl font-bold text-white md:text-5xl lg:text-6xl">
-            探索最新科技與潮流好物
+            探索最新時尚服飾
           </h1>
           <p className="mb-8 max-w-md text-lg text-white/90">
-            NEOShop 為您嚴選全球優質商品，一站式購物體驗，輕鬆成就質感生活
+            NEOFashion 為您精選全球優質服裝，展現個人風格，彰顯獨特魅力
           </p>
           <Button asChild size="lg">
             <Link href="/shop">立即選購</Link>
@@ -33,50 +33,50 @@ export default function Home() {
       {/* 特色分類 */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold">熱門分類</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">服裝分類</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <Link href="/shop/products/category/electronics" className="group block overflow-hidden rounded-lg">
+            <Link href="/shop/products/category/mens" className="group block overflow-hidden rounded-lg">
               <div className="relative h-64 overflow-hidden">
                 <Image
-                  src="https://images.unsplash.com/photo-1593344484962-796055d4a3a4?q=80&w=2574"
-                  alt="電子產品"
+                  src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=2574"
+                  alt="男裝"
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-2xl font-bold text-white">電子產品</h3>
-                  <p className="text-white/80">最新科技一手掌握</p>
+                  <h3 className="text-2xl font-bold text-white">男裝</h3>
+                  <p className="text-white/80">簡約風格，質感穿搭</p>
                 </div>
               </div>
             </Link>
-            <Link href="/shop/products/category/clothing" className="group block overflow-hidden rounded-lg">
+            <Link href="/shop/products/category/womens" className="group block overflow-hidden rounded-lg">
               <div className="relative h-64 overflow-hidden">
                 <Image
-                  src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2670"
-                  alt="服飾"
+                  src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?q=80&w=2021"
+                  alt="女裝"
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-2xl font-bold text-white">服飾</h3>
-                  <p className="text-white/80">時尚穿搭提案</p>
+                  <h3 className="text-2xl font-bold text-white">女裝</h3>
+                  <p className="text-white/80">時尚流行，優雅風格</p>
                 </div>
               </div>
             </Link>
-            <Link href="/shop/products/category/home" className="group block overflow-hidden rounded-lg">
+            <Link href="/shop/products/category/accessories" className="group block overflow-hidden rounded-lg">
               <div className="relative h-64 overflow-hidden">
                 <Image
-                  src="https://images.unsplash.com/photo-1520453714493-d3eff80e3379?q=80&w=2525"
-                  alt="家居"
+                  src="https://images.unsplash.com/photo-1625591339971-4c9a87a66871?q=80&w=2070"
+                  alt="配飾"
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-2xl font-bold text-white">家居</h3>
-                  <p className="text-white/80">打造質感生活空間</p>
+                  <h3 className="text-2xl font-bold text-white">配飾</h3>
+                  <p className="text-white/80">完美細節，畫龍點睛</p>
                 </div>
               </div>
             </Link>
@@ -87,32 +87,96 @@ export default function Home() {
       {/* 特色商品 */}
       <section className="bg-muted/40 py-16">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold">精選商品</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">本季精選</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((item) => (
-              <Card key={item} className="overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <Image
-                    src={`https://picsum.photos/seed/${item}/400/300`}
-                    alt={`特色商品 ${item}`}
-                    fill
-                    className="object-cover transition-all hover:scale-105"
-                  />
+            <Card className="overflow-hidden">
+              <div className="relative h-64 overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1521223890158-f9f7c3d5d504?q=80&w=1992"
+                  alt="經典白襯衫"
+                  fill
+                  className="object-cover transition-all hover:scale-105"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="mb-2 font-medium">經典簡約白襯衫</div>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  百搭款式，高品質面料
                 </div>
-                <CardContent className="p-4">
-                  <div className="mb-2 font-medium">精選商品 {item}</div>
-                  <div className="mb-4 text-sm text-muted-foreground">
-                    高品質精選商品，限時特價
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="font-bold text-primary">NT$ {(1000 * item).toLocaleString()}</div>
-                    <Button variant="outline" size="sm">
-                      查看詳情
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-primary">NT$ 1,200</div>
+                  <Button variant="outline" size="sm">
+                    查看詳情
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="relative h-64 overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1548126032-079a0fb0099d?q=80&w=1974"
+                  alt="丹寧牛仔褲"
+                  fill
+                  className="object-cover transition-all hover:scale-105"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="mb-2 font-medium">修身丹寧牛仔褲</div>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  舒適彈性，完美剪裁
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-primary">NT$ 1,500</div>
+                  <Button variant="outline" size="sm">
+                    查看詳情
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="relative h-64 overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1936"
+                  alt="針織毛衣"
+                  fill
+                  className="object-cover transition-all hover:scale-105"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="mb-2 font-medium">柔軟針織毛衣</div>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  保暖舒適，多色可選
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-primary">NT$ 1,800</div>
+                  <Button variant="outline" size="sm">
+                    查看詳情
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="relative h-64 overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=1970"
+                  alt="時尚外套"
+                  fill
+                  className="object-cover transition-all hover:scale-105"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="mb-2 font-medium">時尚休閒外套</div>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  率性風格，秋冬必備
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-primary">NT$ 2,200</div>
+                  <Button variant="outline" size="sm">
+                    查看詳情
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -140,9 +204,9 @@ export default function Home() {
                   <path d="M12 5v14" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold">品質保證</h3>
+              <h3 className="mb-2 text-xl font-semibold">優質面料</h3>
               <p className="text-muted-foreground">
-                嚴格把關每件商品品質，提供最高品質的購物體驗
+                精選高品質面料，舒適觸感，持久耐穿
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
@@ -162,9 +226,9 @@ export default function Home() {
                   <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold">專業服務</h3>
+              <h3 className="mb-2 text-xl font-semibold">時尚設計</h3>
               <p className="text-muted-foreground">
-                貼心客服團隊，為您解決購物過程中的任何問題
+                緊跟國際潮流，提供最新款式與設計
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
