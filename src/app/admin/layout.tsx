@@ -14,8 +14,16 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">NEOFashion 管理後台</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">管理員：張小明</span>
+            <button
+              className="px-3 py-1.5 rounded-md bg-gray-200 text-gray-800 text-sm font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              登出
+            </button>
+          </div>
         </div>
       </header>
       <div className="flex flex-1">
