@@ -1,5 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'NEOFashion Admin',
@@ -29,42 +30,42 @@ export default function AdminLayout({
       <div className="flex flex-1">
         <aside className="w-64 bg-white shadow-sm">
           <nav className="mt-5 px-2">
-            <a
+            <Link
               href="/admin"
               className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-100"
             >
               儀表板
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/products"
               className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-100"
             >
               服裝管理
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/orders"
               className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-100"
             >
               訂單管理
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/users"
               className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-100"
             >
               用戶管理
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/inventory"
               className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-100"
             >
               庫存管理
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/promotions"
               className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-900 hover:bg-gray-100"
             >
               促銷活動
-            </a>
+            </Link>
           </nav>
         </aside>
         <main className="flex-1 p-6">{children}</main>
