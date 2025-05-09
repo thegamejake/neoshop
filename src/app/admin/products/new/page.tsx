@@ -1,22 +1,51 @@
-import React from 'react';
-import Link from 'next/link';
+"use client";
 
-export default async function NewProduct() {
-  // 空白產品表單初始狀態
-  const emptyProduct = {
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+// 產品類型定義
+interface ProductForm {
+  name: string;
+  description: string;
+  price: number;
+  original_price: number;
+  category_id: number;
+  stock: number;
+  sku: string;
+  weight: number;
+  dimensions: string;
+  featured: boolean;
+  sizes: number[];
+  status: string;
+  image_paths: string[]; // 儲存圖片路徑而非檔案本身
+}
+
+export default function NewProduct() {
+  const router = useRouter();
+  
+  // 狀態管理
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  
+  // 產品表單狀態
+  const [formData, setFormData] = useState<ProductForm>({
     name: '',
     description: '',
     price: 0,
-    discountPrice: 0,
-    categoryId: 1,
-    stockQuantity: 0,
+    original_price: 0,
+    category_id: 1,
+    stock: 0,
     sku: '',
-    weight: 0.0,
+    weight: 0,
     dimensions: '',
     featured: false,
     sizes: [],
-    images: [],
-  };
+    status: 'on_sale',
+    image_paths: [] // 初始化為空陣列
+  });
 
   // 模擬所有可用分類
   const categories = [
@@ -34,6 +63,167 @@ export default async function NewProduct() {
     { id: 5, size: 'XL' },
     { id: 6, size: 'XXL' },
   ];
+  
+  // 產品狀態選項
+  const statusOptions = [
+    { value: 'on_sale', label: '在售' },
+    { value: 'low_stock', label: '低庫存' },
+    { value: 'out_of_stock', label: '缺貨' },
+    { value: 'discontinued', label: '停售' }
+  ];
+
+  // 處理輸入改變
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else if (type === 'number') {
+      setFormData((prev) => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+  
+  // 處理尺碼選擇
+  const handleSizeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    const sizeId = parseInt(value);
+    
+    setFormData((prev) => {
+      if (checked) {
+        return { ...prev, sizes: [...prev.sizes, sizeId] };
+      } else {
+        return { ...prev, sizes: prev.sizes.filter(id => id !== sizeId) };
+      }
+    });
+  };
+  
+  // 處理圖片上傳
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    
+    Array.from(files).forEach(file => {
+      if (file.size > 10 * 1024 * 1024) { // 10MB限制
+        setError('圖片大小不能超過10MB');
+        return;
+      }
+      
+      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        setError('只能上傳JPG、PNG或GIF格式的圖片');
+        return;
+      }
+      
+      newFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
+    });
+    
+    setImageFiles((prev) => [...prev, ...newFiles]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+    setError(null);
+  };
+  
+  // 移除圖片
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    
+    // 清除已創建的對象URL，避免內存洩漏
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // 上傳圖片到本地資料夾
+  const uploadImagesToLocal = async (files: File[]): Promise<string[]> => {
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const fileName = `${Date.now()}-${file.name}`;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('fileName', fileName);
+        
+        // 使用API路由上傳檔案到本地資料夾
+        // 不要設置 headers，讓瀏覽器自動處理 Content-Type
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || '上傳圖片失敗');
+        }
+        
+        const data = await response.json();
+        return data.filePath; // 返回保存的路徑
+      });
+      
+      return Promise.all(uploadPromises);
+    } catch (error) {
+      console.error('上傳圖片失敗:', error);
+      throw error;
+    }
+  };
+  
+  // 表單提交處理
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // 表單驗證
+    if (!formData.name.trim()) {
+      setError('產品名稱不能為空');
+      return;
+    }
+    
+    if (formData.price <= 0) {
+      setError('產品價格必須大於0');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      
+      // 先上傳圖片到本地資料夾
+      let imagePaths: string[] = [];
+      if (imageFiles.length > 0) {
+        imagePaths = await uploadImagesToLocal(imageFiles);
+      }
+      
+      // 準備產品數據
+      const productData = {
+        ...formData,
+        image_paths: imagePaths // 使用剛上傳的圖片路徑
+      };
+      
+      // 發送API請求
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '添加產品失敗');
+      }
+      
+      const result = await response.json();
+      
+      // 重定向到產品列表頁面
+      router.push('/admin/products');
+    } catch (err: any) {
+      setError(err.message || '添加產品時發生錯誤');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -60,8 +250,23 @@ export default async function NewProduct() {
             </Link>
           </div>
         </div>
+        
+        {error && (
+          <div className="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">{error}</h3>
+              </div>
+            </div>
+          </div>
+        )}
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="flex flex-col lg:flex-row gap-6">
             {/* 左側主要資訊 */}
             <div className="flex-1 space-y-6">
@@ -79,6 +284,8 @@ export default async function NewProduct() {
                       id="name"
                       placeholder="輸入產品名稱"
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      value={formData.name}
+                      onChange={handleInputChange}
                       required
                     />
                   </div>
@@ -91,16 +298,19 @@ export default async function NewProduct() {
                       rows={3}
                       placeholder="詳細描述產品的特點、材質和用途"
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      value={formData.description}
+                      onChange={handleInputChange}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                      <label htmlFor="category" className="block text-sm font-medium text-gray-700">產品分類</label>
+                      <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">產品分類</label>
                       <select
-                        id="category"
-                        name="category"
-                        defaultValue={emptyProduct.categoryId}
+                        id="category_id"
+                        name="category_id"
+                        value={formData.category_id}
+                        onChange={handleInputChange}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         required
                       >
@@ -119,6 +329,8 @@ export default async function NewProduct() {
                         id="sku"
                         placeholder="例如: SHIRT-2023-001"
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        value={formData.sku}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -132,8 +344,8 @@ export default async function NewProduct() {
                   <h3 className="text-lg font-medium text-gray-900">價格與庫存</h3>
                 </div>
                 <div className="px-6 py-5">
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                    <div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-4">
+                    <div className="sm:col-span-1">
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700">原價 (NT$)</label>
                       <div className="mt-1 relative rounded-md shadow-sm">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -144,36 +356,65 @@ export default async function NewProduct() {
                           name="price"
                           id="price"
                           placeholder="0"
+                          min="0"
+                          step="1"
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-7 pr-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          value={formData.price || ''}
+                          onChange={handleInputChange}
                           required
                         />
                       </div>
                     </div>
-                    <div>
-                      <label htmlFor="discountPrice" className="block text-sm font-medium text-gray-700">折扣價 (NT$)</label>
+                    <div className="sm:col-span-1">
+                      <label htmlFor="original_price" className="block text-sm font-medium text-gray-700">折扣價 (NT$)</label>
                       <div className="mt-1 relative rounded-md shadow-sm">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <span className="text-gray-500 sm:text-sm">$</span>
                         </div>
                         <input
                           type="number"
-                          name="discountPrice"
-                          id="discountPrice"
+                          name="original_price"
+                          id="original_price"
                           placeholder="0"
+                          min="0"
+                          step="1"
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-7 pr-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          value={formData.original_price || ''}
+                          onChange={handleInputChange}
                         />
                       </div>
                     </div>
-                    <div>
-                      <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700">庫存數量</label>
+                    <div className="sm:col-span-1">
+                      <label htmlFor="stock" className="block text-sm font-medium text-gray-700">庫存數量</label>
                       <input
                         type="number"
-                        name="stockQuantity"
-                        id="stockQuantity"
+                        name="stock"
+                        id="stock"
                         placeholder="0"
+                        min="0"
+                        step="1"
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        value={formData.stock || ''}
+                        onChange={handleInputChange}
                         required
                       />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <label htmlFor="status" className="block text-sm font-medium text-gray-700">產品狀態</label>
+                      <select
+                        id="status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        required
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -183,6 +424,8 @@ export default async function NewProduct() {
                       name="featured"
                       type="checkbox"
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      checked={formData.featured}
+                      onChange={handleInputChange}
                     />
                     <label htmlFor="featured" className="ml-2 block text-sm text-gray-900">
                       設為精選產品
@@ -241,6 +484,8 @@ export default async function NewProduct() {
                             name="sizes"
                             type="checkbox"
                             value={size.id}
+                            checked={formData.sizes.includes(size.id)}
+                            onChange={handleSizeChange}
                             className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
                           />
                         </div>
@@ -287,7 +532,15 @@ export default async function NewProduct() {
                           className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none"
                         >
                           <span>上傳圖片</span>
-                          <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple />
+                          <input 
+                            id="file-upload" 
+                            name="file-upload" 
+                            type="file" 
+                            className="sr-only" 
+                            multiple 
+                            accept="image/jpeg,image/png,image/gif"
+                            onChange={handleImageUpload}
+                          />
                         </label>
                         <p className="pl-1">或拖放文件</p>
                       </div>
@@ -295,10 +548,28 @@ export default async function NewProduct() {
                     </div>
                   </div>
 
-                  {/* 已上傳圖片預覽區域 - 初始為空 */}
+                  {/* 已上傳圖片預覽區域 */}
                   <div className="space-y-3" id="image-preview-container">
-                    {/* 上傳的圖片將顯示在此處 */}
-                    <p className="text-sm text-gray-500 text-center py-2">尚未上傳圖片</p>
+                    {imagePreviews.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group border rounded-md overflow-hidden">
+                            <img src={preview} alt={`預覽 ${index}`} className="w-full h-24 object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-2">尚未上傳圖片</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -316,9 +587,20 @@ export default async function NewProduct() {
               </Link>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                disabled={isSubmitting}
+                className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                  isSubmitting ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                }`}
               >
-                建立產品
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    處理中...
+                  </span>
+                ) : '建立產品'}
               </button>
             </div>
           </div>

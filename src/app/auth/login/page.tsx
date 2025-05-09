@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRegistered = searchParams.get('registered') === 'true';
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,6 +23,25 @@ export default function LoginPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(isRegistered);
+
+  // 顯示成功訊息3秒後自動隱藏
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
+
+  // 檢查是否有重定向URL，如果有則執行跳轉
+  useEffect(() => {
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  }, [redirectUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -74,25 +96,53 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // 模擬 API 請求
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+        credentials: 'include' // 確保包含 cookies
+      });
 
-      // 模擬成功登入 (在實際應用中，這裡將使用真實的身份驗證 API)
-      if (formData.email === 'admin@example.com' && formData.password === 'password') {
-        // 導航到管理後台
-        router.push('/admin');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || '登入失敗');
+      }
+
+      if (data.success) {
+        // 根據用戶角色導向不同頁面
+        if (data.role === 'admin') {
+          // 管理員導向管理後台
+          setTimeout(() => {
+            setRedirectUrl(data.redirectTo || '/admin');
+          }, 500);
+        } else if (data.role === 'user') {
+          // 普通用戶導向NEOFashion主頁(根路徑)
+          setTimeout(() => {
+            setRedirectUrl('/');
+          }, 500);
+        } else {
+          // VIP用戶或其他角色的處理
+          setTimeout(() => {
+            setRedirectUrl('/');
+          }, 500);
+        }
       } else {
-        // 顯示錯誤訊息
         setErrors(prev => ({
           ...prev,
-          auth: '電子郵件或密碼錯誤'
+          auth: data.message || '電子郵件或密碼錯誤'
         }));
       }
     } catch (error) {
       console.error('登入失敗', error);
       setErrors(prev => ({
         ...prev,
-        auth: '登入時發生錯誤，請稍後再試'
+        auth: error instanceof Error ? error.message : '登入時發生錯誤，請稍後再試'
       }));
     } finally {
       setIsLoading(false);
@@ -121,6 +171,21 @@ export default function LoginPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {showSuccessMessage && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">註冊成功！請使用您的新帳戶登入。</h3>
+                </div>
+              </div>
+            </div>
+          )}
+
           {errors.auth && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">

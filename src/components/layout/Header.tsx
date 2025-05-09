@@ -1,11 +1,47 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingCart, User, Search } from "lucide-react";
+import { ShoppingCart, User, Search, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function Header() {
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  
+  useEffect(() => {
+    // 獲取當前用戶信息
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user/profile', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('獲取用戶信息失敗:', error);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+  
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      // 登出後重新載入頁面
+      window.location.href = '/';
+    } catch (error) {
+      console.error('登出失敗:', error);
+    }
+  };
+
   return (
     <header className="border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -56,19 +92,44 @@ export function Header() {
               className="pl-8"
             />
           </div>
-          <Link href="/account">
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
-          <Link href="/shop/cart">
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                0
-              </span>
-            </Button>
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm">{user.name}</span>
+              <Link href="/account">
+                <Button variant="ghost" size="icon" title="我的帳戶">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Button variant="ghost" size="icon" onClick={handleLogout} title="登出">
+                <LogOut className="h-5 w-5" />
+              </Button>
+              <Link href="/shop/cart">
+                <Button variant="ghost" size="icon" className="relative" title="購物車">
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                    0
+                  </span>
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link href="/auth/login">
+                <Button variant="ghost" size="sm">登入</Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button size="sm">註冊</Button>
+              </Link>
+              <Link href="/shop/cart">
+                <Button variant="ghost" size="icon" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                    0
+                  </span>
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

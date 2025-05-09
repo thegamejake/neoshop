@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { RegisterFormData, RegisterFormErrors } from '@/types';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterFormData>({
     name: '',
     email: '',
     password: '',
@@ -14,7 +15,7 @@ export default function RegisterPage() {
     agreeTerms: false
   });
 
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<RegisterFormErrors>({
     name: '',
     email: '',
     password: '',
@@ -105,23 +106,31 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 模擬 API 請求
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // 在實際應用中，這裡將註冊用戶並處理登入
-      console.log('註冊資料:', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '註冊時發生錯誤');
+      }
       
-      // 導航到登入頁面
-      router.push('/auth/login');
+      // 註冊成功，導航到登入頁面
+      router.push('/auth/login?registered=true');
     } catch (error) {
       console.error('註冊失敗', error);
       setErrors(prev => ({
         ...prev,
-        general: '註冊時發生錯誤，請稍後再試'
+        general: error instanceof Error ? error.message : '註冊時發生錯誤，請稍後再試'
       }));
     } finally {
       setIsLoading(false);

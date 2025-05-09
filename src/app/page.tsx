@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShopLayout } from "@/components/layout/ShopLayout";
@@ -5,8 +8,48 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Home() {
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  
+  useEffect(() => {
+    // 獲取當前用戶信息
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user/profile', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setShowWelcome(true);
+          
+          // 設置5秒後隱藏歡迎信息
+          setTimeout(() => {
+            setShowWelcome(false);
+          }, 5000);
+        }
+      } catch (error) {
+        console.error('獲取用戶信息失敗:', error);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+
   return (
     <ShopLayout>
+      {/* 用戶歡迎信息 */}
+      <div 
+        className={`bg-indigo-50 py-2 text-center transition-all duration-700 ease-in-out ${
+          user && showWelcome ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
+        }`}
+      >
+        <p className="text-sm text-indigo-700">
+          歡迎回來，{user?.name || '測試用戶'}！瀏覽最新的時尚商品
+        </p>
+      </div>
+
       {/* 主橫幅 */}
       <section className="relative h-[500px] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30 z-10" />
